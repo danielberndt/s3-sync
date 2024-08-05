@@ -12,7 +12,8 @@
   "exports": {
     ".": {
       "import": "./dist/s3-sync.mjs",
-      "require": "./dist/s3-sync.cjs"
+      "require": "./dist/s3-sync.cjs",
+      "types": "./dist/s3-sync.d.ts"
     }
   },
   "typings": "./dist/s3-sync.d.ts",
