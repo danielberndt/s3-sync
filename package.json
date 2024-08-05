@@ -1,0 +1,35 @@
+{
+  "name": "s3-sync",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/s3-sync.umd.cjs",
+  "module": "./dist/s3-sync.js",
+  "exports": {
+    ".": {
+      "import": "./dist/s3-sync.js",
+      "require": "./dist/s3-sync.umd.cjs"
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/mime-types": "^2.1.4",
+    "@types/node": "^22.1.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.2.2",
+    "vite": "^5.3.4"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cloudfront": "^3.623.0",
+    "@aws-sdk/client-s3": "^3.623.0",
+    "bottleneck": "^2.19.5",
+    "mime-types": "^2.1.35"
+  }
+}
