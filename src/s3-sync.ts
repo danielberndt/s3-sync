@@ -115,7 +115,7 @@ const upload = async (opts: {
       const startFile = performance.now();
       const getCacheControl = () => {
         if (key.endsWith(".html") || key.endsWith(".txt")) {
-          return "no-store, no-cache, must-revalidate, s-maxage=315360000";
+          return "no-cache, must-revalidate, s-maxage=315360000";
         }
         if (key === "favicon.ico") {
           return "public, max-age=43200, s-maxage=315360000";
