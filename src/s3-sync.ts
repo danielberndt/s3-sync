@@ -30,6 +30,7 @@ async function* getFiles(dir: string): AsyncGenerator<string> {
   const entries = await fs.readdir(dir, {withFileTypes: true, recursive: true});
   for (const entry of entries) {
     if (entry.isDirectory()) continue;
+    if (entry.name.startsWith(".")) continue;
     yield join(entry.path, entry.name);
   }
 }
@@ -93,7 +94,9 @@ const upload = async (opts: {
 }) => {
   const {client, config, localFiles, remoteFiles} = opts;
 
-  const uploadLimiter = new Bottleneck({maxConcurrent: 10});
+  const uploadLimiter = new Bottleneck({
+    maxConcurrent: config.parallelUploads ?? 10,
+  });
 
   let needsInvalidation = false;
 
@@ -111,7 +114,9 @@ const upload = async (opts: {
     void uploadLimiter.schedule(async () => {
       const startFile = performance.now();
       const getCacheControl = () => {
-        if (key.endsWith(".html")) return "max-age=0, no-transform, public";
+        if (key.endsWith(".html") || key.endsWith(".txt")) {
+          return "max-age=0, no-transform, public";
+        }
         if (key === "favicon.ico") return "max-age=43200, no-transform, public";
         return "max-age=315360000, no-transform, public";
       };
@@ -166,7 +171,9 @@ const deleteOldFiles = async (opts: {
   const {config, remoteFiles, client} = opts;
 
   if (remoteFiles.size > 0) {
-    const deleteLimiter = new Bottleneck({maxConcurrent: 10});
+    const deleteLimiter = new Bottleneck({
+      maxConcurrent: config.parallelUploads ?? 10,
+    });
     for (const [key, info] of remoteFiles) {
       const tooOld = () => {
         if (!info.lastModified) return true;
@@ -199,6 +206,7 @@ type SyncConfig = {
   putObjectConfig?: (path: string) => PutObjectCommandInput;
   cloudfrontClientConfig?: CloudFrontClientConfig;
   cloudfrontDistributionId: string;
+  parallelUploads?: number;
 };
 
 const sync = async (config: SyncConfig) => {
