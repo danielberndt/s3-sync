@@ -115,10 +115,12 @@ const upload = async (opts: {
       const startFile = performance.now();
       const getCacheControl = () => {
         if (key.endsWith(".html") || key.endsWith(".txt")) {
-          return "max-age=0, no-transform, public";
+          return "no-store, no-cache, must-revalidate, s-maxage=315360000";
         }
-        if (key === "favicon.ico") return "max-age=43200, no-transform, public";
-        return "max-age=315360000, no-transform, public";
+        if (key === "favicon.ico") {
+          return "public, max-age=43200, s-maxage=315360000";
+        }
+        return "public, max-age=31536000, immutable";
       };
       const command = new PutObjectCommand({
         Bucket: config.bucket,
