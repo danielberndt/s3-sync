@@ -37,10 +37,10 @@ async function* getFiles(dir: string): AsyncGenerator<string> {
 
 type LocalFileInfo = {key: string; md5: string; localPath: string};
 
-const getLocalFiles = async () => {
+const getLocalFiles = async (config: SyncConfig) => {
   const map = new Map<string, LocalFileInfo>();
-  for await (const file of getFiles("dist")) {
-    const key = relative("dist", file);
+  for await (const file of getFiles(config.path)) {
+    const key = relative(config.path, file);
     map.set(key, {key, md5: await calculateMD5(file), localPath: file});
   }
   return map;
@@ -213,7 +213,7 @@ const sync = async (config: SyncConfig) => {
   const start = performance.now();
   const s3 = new S3Client({region: config.region, ...config.s3ClientConfig});
   const [localFiles, remoteFiles] = await Promise.all([
-    getLocalFiles(),
+    getLocalFiles(config),
     getRemoteFiles(s3, config),
   ]);
   console.log(`🔁 synced in ${Math.round(performance.now() - start)}ms`);
