@@ -2,7 +2,7 @@
   "name": "@danielberndt/s3-sync",
   "author": "Daniel Berndt <daniel.berndt@gmail.com> (http://danielberndt.net/)",
   "license": "ISC",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "type": "module",
   "files": [
     "dist"
