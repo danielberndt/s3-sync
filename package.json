@@ -21,7 +21,8 @@
     "dev": "vite",
     "build:mjs": "esbuild --bundle --platform=node --packages=external --format=esm --outfile=dist/s3-sync.mjs src/s3-sync.ts",
     "build:cjs": "esbuild --bundle --platform=node --packages=external --format=cjs --outfile=dist/s3-sync.cjs src/s3-sync.ts",
-    "build": "tsc && npm run build:mjs && npm run build:cjs"
+    "build": "tsc && npm run build:mjs && npm run build:cjs",
+    "prepublish": "npm run build"
   },
   "devDependencies": {
     "@types/mime-types": "^2.1.4",
