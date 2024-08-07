@@ -1,6 +1,11 @@
 {
   "name": "@danielberndt/s3-sync",
   "author": "Daniel Berndt <daniel.berndt@gmail.com> (http://danielberndt.net/)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danielberndt/s3-sync.git"
+  },
+  "homepage": "https://github.com/danielberndt/s3-sync",
   "license": "ISC",
   "version": "0.1.6",
   "type": "module",
