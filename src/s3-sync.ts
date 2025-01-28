@@ -98,6 +98,18 @@ const upload = async (opts: {
     maxConcurrent: config.parallelUploads ?? 10,
   });
 
+  const addPut = (key: string, command: PutObjectCommand) =>
+    uploadLimiter.schedule(async () => {
+      const startFile = performance.now();
+      console.log("🔄", key);
+      await client.send(command);
+      console.log(
+        "✅",
+        key,
+        `in ${Math.round(performance.now() - startFile)}ms`
+      );
+    });
+
   let needsInvalidation = false;
 
   for (const [key, local] of localFiles) {
@@ -111,34 +123,41 @@ const upload = async (opts: {
         needsInvalidation = true;
       }
     }
-    void uploadLimiter.schedule(async () => {
-      const startFile = performance.now();
-      const getCacheControl = () => {
-        if (key.endsWith(".html") || key.endsWith(".txt")) {
-          return "no-cache, must-revalidate, s-maxage=315360000";
-        }
-        if (key === "favicon.ico") {
-          return "public, max-age=43200, s-maxage=315360000";
-        }
-        return "public, max-age=31536000, immutable";
-      };
-      const command = new PutObjectCommand({
-        Bucket: config.bucket,
-        Key: local.key,
-        Body: createReadStream(local.localPath),
-        ACL: "public-read",
-        CacheControl: getCacheControl(),
-        ContentType: mime.lookup(local.localPath) || "application/octet-stream",
-        ...config.putObjectConfig?.(local.localPath),
-      });
-      console.log("🔄", key);
-      await client.send(command);
-      console.log(
-        "✅",
-        key,
-        `in ${Math.round(performance.now() - startFile)}ms`
-      );
+    const getCacheControl = () => {
+      if (key.endsWith(".html") || key.endsWith(".txt")) {
+        return "no-cache, must-revalidate, s-maxage=315360000";
+      }
+      if (key === "favicon.ico") {
+        return "public, max-age=43200, s-maxage=315360000";
+      }
+      return "public, max-age=31536000, immutable";
+    };
+    const command = new PutObjectCommand({
+      Bucket: config.bucket,
+      Key: local.key,
+      Body: createReadStream(local.localPath),
+      ACL: "public-read",
+      CacheControl: getCacheControl(),
+      ContentType: mime.lookup(local.localPath) || "application/octet-stream",
+      ...config.putObjectConfig?.(local.localPath),
     });
+    void addPut(local.key, command);
+  }
+  const {customPuts} = config;
+  if (customPuts) {
+    for (const {command, md5} of customPuts) {
+      const key = command.input.Key!;
+      const remote = remoteFiles.get(key);
+      remoteFiles.delete(key);
+      if (remote) {
+        if (md5 && remote.md5 === md5) {
+          continue;
+        } else {
+          needsInvalidation = true;
+        }
+      }
+      void addPut(key, command);
+    }
   }
 
   await uploadLimiter.stop({dropWaitingJobs: false});
@@ -209,6 +228,7 @@ type SyncConfig = {
   cloudfrontClientConfig?: CloudFrontClientConfig;
   cloudfrontDistributionId: string;
   parallelUploads?: number;
+  customPuts?: {command: PutObjectCommand; md5?: string}[];
 };
 
 const sync = async (config: SyncConfig) => {
